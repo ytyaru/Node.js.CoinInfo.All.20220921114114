@@ -1,6 +1,6 @@
 coininfoの全コイン種別を調べる
 
-　24種あった。
+　コードを読んだり書いたりして調べた。
 
 <!-- more -->
 
@@ -35,13 +35,69 @@ node index.js
 
 # ソースコード作成
 
-　[前回][]のやつに`network`の設定を追加した。`coininfo`で`MONA`を指定すると返される。
-
-[]:
-
 ```sh
 vim index.js
 ```
+
+# 追記
+
+　コメントで[Object.keys][]を教えていただきました。おかげさまで綺麗なコードが書けました。ありがとうございます。
+
+[Object.keys]:https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Object/keys
+
+## コード
+
+```javascript
+const tinysecp = require('tiny-secp256k1');
+const coininfo = require('coininfo');
+const ecpair = require('ecpair');
+const bitcoin = require('bitcoinjs-lib');
+
+const names = Object.keys(coininfo)
+const units = Object.values(coininfo).map(coin=>coin.main.unit)
+console.assert(names.length === units.length)
+for (let i=0; i<names.length; i++) {
+    console.log(`${units[i]}\t${names[i]}`)
+}
+```
+
+## 実行結果
+
+```sh
+BCH	bitcoincash
+BLK	blackcoin
+BTC	bitcoin
+BTG	bitcoin gold
+RYO	c0ban
+CITY	citycoin
+DASH	dash
+DNR	denarius
+DCR	decred
+DGB	digibyte
+DOGE	dogecoin
+GRS	groestlcoin
+LTC	litecoin
+VIA	viacoin
+MONA	monacoin
+NBT	nubits
+NMC	namecoin
+PPC	peercoin
+QTUM	qtum
+RVN	ravencoin
+RDD	reddcoin
+VTC	vertcoin
+x42	x42
+ZEC	zcash
+```
+
+　ソートしたほうがいいのでは？　と一瞬おもったが、デフォルト順で`names`と`units`の順序が対応しているのでソートしないほうがいい。もし`names`と`units`が各自ソートしてしまったら対応順が狂ってしまう。たとえば`units`の5つ目にある`RYO`とか。これは`c0ban`という名前と対応しているはず。でも`RYO`のほうは辞書順でソートすると（`RVN`の下）にいってしまう。なのでソートしないまま使った。
+
+<details><summary>旧コード</summary>
+
+　上のコードと比べると、どれだけ残念なことをしていたかよくわかる。
+
+　じつは下のコードを書いているとき「なんかもっといい方法ないのか」と思っていたものの、具体的にどうすればいいかわからず。JavaScriptの知識が足りていないことが露呈。コメントで教えていただき勉強できた。感謝！
+
 ```javascript
 const tinysecp = require('tiny-secp256k1');
 const coininfo = require('coininfo');
@@ -106,13 +162,7 @@ console.log(coininfo.x42.main.name)
 console.log(coininfo.zcash.main.name)
 ```
 
-# 実行
-
-```sh
-node index.js
-```
-
-# 結果
+## 結果
 
 ```sh
 BCH
@@ -164,6 +214,14 @@ ReddCoin
 Vertcoin
 x42
 Zcash
+```
+
+</details>
+
+# 実行
+
+```sh
+node index.js
 ```
 
 　とりあえずこれを`unit.txt`, `name.txt`にそれぞれ保存した。
@@ -234,11 +292,11 @@ console.log(coininfo().keys())
 console.log(coininfo))
 ```
 
-　出力された。でもオブジェクト。名前の一覧だけ欲しいのだが。
+　色々出た。でもコインの名だけ欲しい。
 
 ## 試行３
 
-　`coininfo('コイン名')`のうち引数で渡すコイン名一覧がほしかった。なのに`coininfo`にはそれを返すプロパティやメソッドがない。そんなバカなと思ったのでコードを読んでみたら、内部でもってるだけで外部に渡さない設計だった……。
+　`coininfo('コイン名')`のうち引数で渡すコイン名一覧がほしかった。なのに`coininfo`にはそれを返すプロパティやメソッドがない。READMEにも書いてない。そんなバカなと思ってコードを読んでみたら、内部でもってるだけで外部に渡さない設計だった……。
 
 * [coininfo.js][]
 
@@ -255,7 +313,7 @@ var supportedCoins = {}
 ...
 ```
 
-　これを外部にも公開してほしかったなぁ……。
+　`supportedCoins`を外部にも公開してほしかった。
 
 　以下のようにしても`undefined`。参照できない。
 
@@ -263,6 +321,10 @@ var supportedCoins = {}
 const coininfo = require('coininfo');
 console.log('coininfo.supportedCoins:', coininfo.supportedCoins)
 ```
+
+## 試行４
+
+　コメントで[Object.keys][]を教えていただき綺麗なコードで書けました。ありがとうございます。
 
 # 情報源
 
